@@ -1,4 +1,4 @@
-"""Estágio 03: cues.md + words.json -> cues.json (segundo de início de cada beat).
+"""Estágio 03: cues.md + alinhado.json (roteiro com tempo, de tools/legendas.py) -> cues.json (segundo de início de cada beat).
 
 Uso: .venv\\Scripts\\python.exe tools\\cues.py videos\\<nome>
 Cada linha da tabela de cues.md: | id | "âncora" | ... . A âncora é procurada em ordem,
@@ -18,7 +18,10 @@ def norm(s):
 
 video = Path(sys.argv[1])
 rows = re.findall(r'^\|\s*([\w-]+)\s*\|\s*"([^"]+)"', (video / "03_cues" / "cues.md").read_text(encoding="utf-8"), re.M)
-words = json.loads((video / "02_transcript" / "words.json").read_text(encoding="utf-8"))
+alinhado = video / "02_transcript" / "alinhado.json"
+if not alinhado.exists():
+    sys.exit("rode antes tools/legendas.py (gera alinhado.json)")
+words = json.loads(alinhado.read_text(encoding="utf-8"))
 toks = [norm(w["w"]) for w in words]
 
 cues, pos, erros = [], 0, []

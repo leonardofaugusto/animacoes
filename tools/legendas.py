@@ -5,6 +5,7 @@ O TEXTO vem do roteiro (grafia certa); o Whisper só dá os TEMPOS. Cada palavra
 casa com a próxima palavra igual do Whisper numa janela curta; sem par, herda o tempo da vizinha.
 Quebra em blocos de até MAX caracteres, preferindo fechar em pontuação.
 """
+import difflib
 import json
 import re
 import sys
@@ -20,7 +21,8 @@ def norm(s):
     return re.sub(r"[^a-z0-9]", "", "".join(c for c in s if not unicodedata.combining(c)))
 
 
-md = (video / "01_voice" / "script.md").read_text(encoding="utf-8").split("## Pronúncia")[0]
+md = re.split(r"\n## ", (video / "01_voice" / "script.md").read_text(encoding="utf-8"))[0]
+md = re.sub(r"<break[^>]*/>", " ", md)  # marcação de pausa da voz não vai para a legenda
 roteiro = " ".join(l for l in md.splitlines() if l.strip() and not l.startswith(("#", "~"))).split()
 
 ws = []  # Whisper, com "-financeiro" grudado no token anterior
@@ -30,19 +32,19 @@ for w in json.loads((video / "02_transcript" / "words.json").read_text(encoding=
     else:
         ws.append(dict(w))
 
-tempos, j = [], 0
-for palavra in roteiro:
-    hit = next((k for k in range(j, min(j + 4, len(ws))) if norm(ws[k]["w"]) == norm(palavra)), None)
-    if hit is None:
-        tempos.append(None)
-    else:
-        tempos.append((ws[hit]["start"], ws[hit]["end"]))
-        j = hit + 1
+# alinhamento global (difflib): uma palavra sem par não derruba as seguintes
+tempos = [None] * len(roteiro)
+sm = difflib.SequenceMatcher(None, [norm(p) for p in roteiro], [norm(w["w"]) for w in ws], autojunk=False)
+for bloco in sm.get_matching_blocks():
+    for k in range(bloco.size):
+        w = ws[bloco.b + k]
+        tempos[bloco.a + k] = (w["start"], w["end"])
 sem_par = [p for p, t in zip(roteiro, tempos) if t is None]
-for i, t in enumerate(tempos):  # sem par: começa onde a anterior terminou
+for i, t in enumerate(tempos):  # sem par: interpola entre a vizinha anterior e a próxima com tempo
     if t is None:
         a = tempos[i - 1][1] if i else 0
-        tempos[i] = (a, a)
+        b = next((x[0] for x in tempos[i + 1:] if x), a)
+        tempos[i] = (a, max(a, b))
 
 blocos, atual = [], []
 for i, palavra in enumerate(roteiro):
@@ -63,6 +65,8 @@ for a, b in zip(leg, leg[1:]):  # segura a legenda até a próxima se a pausa fo
         a["t1"] = b["t0"]
 
 out = video / "02_transcript"
+# roteiro palavra a palavra com tempo: base das âncoras do cues.py (texto do roteiro, não do Whisper)
+(out / "alinhado.json").write_text(json.dumps([{"w": p, "start": t[0], "end": t[1]} for p, t in zip(roteiro, tempos)], ensure_ascii=False, indent=0), encoding="utf-8")
 (out / "legendas.js").write_text("window.LEGENDAS = " + json.dumps(leg, ensure_ascii=False) + ";\n", encoding="utf-8")
 
 

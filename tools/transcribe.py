@@ -17,7 +17,7 @@ from faster_whisper import WhisperModel
 video = Path(sys.argv[1])
 escolha = (video / "01_voice" / "escolha.md").read_text(encoding="utf-8")
 take = video / "01_voice" / re.search(r"take:\s*(\S+)", escolha).group(1)
-script = (video / "01_voice" / "script.md").read_text(encoding="utf-8")
+script = re.sub(r"<break[^>]*/>", " ", (video / "01_voice" / "script.md").read_text(encoding="utf-8"))
 
 model = WhisperModel("small", device="cpu", compute_type="int8")
 # decodifica com o ffmpeg: o PyAV desta instalação é incompatível com o decode_audio do faster-whisper
@@ -25,7 +25,14 @@ pcm = subprocess.run([shutil.which("ffmpeg") or "ffmpeg", "-loglevel", "error", 
                      capture_output=True, check=True).stdout
 audio = numpy.frombuffer(pcm, dtype=numpy.float32)
 # initial_prompt com o roteiro ajuda a acertar grafia de termos (GitHub, custeio)
-segments, _ = model.transcribe(audio, language="pt", word_timestamps=True, initial_prompt=script[:800])
+# vad_filter + sem condicionar no trecho anterior: evita a alucinação em áudio longo (lixo multilíngue nos primeiros 30s)
+# dica = vocabulário (nomes e siglas do roteiro), não o começo do texto: o trecho longo fazia o Whisper alucinar,
+# e o começo da fala como dica fazia ele pular esse começo
+fala = " ".join(l for l in re.split(r"\n## ", script)[0].splitlines() if l.strip() and not l.startswith(("#", "~")))
+termos = dict.fromkeys(re.findall(r"\b\w*[A-ZÀ-Ý][\w.\-]*", fala))
+dica = ", ".join(t for t in termos if len(t) > 1)[:200]
+segments, _ = model.transcribe(audio, language="pt", word_timestamps=True, initial_prompt=dica,
+                               vad_filter=True, condition_on_previous_text=False)
 
 words, lines = [], []
 for seg in segments:

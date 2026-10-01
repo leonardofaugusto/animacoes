@@ -8,6 +8,7 @@ import json
 import re
 import shutil
 import subprocess
+import time
 from pathlib import Path
 
 from playwright.sync_api import sync_playwright
@@ -26,6 +27,7 @@ if a.quadros:
     with sync_playwright() as pw:
         browser = pw.chromium.launch(channel="msedge")
         page = browser.new_page(viewport={"width": 1920, "height": 1080})
+        page.on("pageerror", lambda e: print("ERRO NA CENA:", e))
         page.goto((video / "04_scene" / "index.html").as_uri() + "?render=1")
         page.wait_for_function("typeof window.render === 'function'")
         page.evaluate("document.fonts.ready")
@@ -59,11 +61,17 @@ with sync_playwright() as pw:
     page.goto((video / "04_scene" / "index.html").as_uri() + "?render=1")
     page.wait_for_function("typeof window.render === 'function' && document.fonts.status === 'loaded'")
     n = round((fim - a.de) * a.fps)
+    inicio = time.time()
     for i in range(n):
         page.evaluate("t => window.render(t)", a.de + i / a.fps)
         enc.stdin.write(page.screenshot(type="png"))
-        if i % (a.fps * 5) == 0:
-            print(f"{a.de + i / a.fps:6.1f}s / {fim:.1f}s", flush=True)
+        if i % (a.fps * 5) == 0 and i:
+            # progresso em arquivo: dá para consultar no meio do render, mesmo rodando em segundo plano
+            gasto = time.time() - inicio
+            resta = gasto / i * (n - i)
+            linha = f"{100 * i / n:5.1f}%  quadro {i}/{n}  vídeo {a.de + i / a.fps:.0f}s/{fim:.0f}s  termina em ~{resta / 60:.0f} min ({time.strftime('%H:%M', time.localtime(time.time() + resta))})"
+            (out / "progresso.txt").write_text(linha + "\n", encoding="utf-8")
+            print(linha, flush=True)
     browser.close()
 enc.stdin.close()
 if enc.wait():
