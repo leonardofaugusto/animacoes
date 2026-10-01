@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+.env
+# arquivos de revisão, descartáveis
+videos/*/04_scene/quadros/
+videos/*/04_scene/folha.png
+videos/*/05_render/teste.mp4

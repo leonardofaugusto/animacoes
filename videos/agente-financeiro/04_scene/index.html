@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="pt-BR">
+<meta charset="utf-8">
+<title>Agente financeiro</title>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Madurai:wght@400;600;700&display=block" rel="stylesheet">
+<style>
+  :root {
+    --cereja: #e50145; --laranja: #f15a22; --amarelo: #efd600; --verde: #0c893e; --roxo: #962e9d;
+    --cereja-cl: #ff87a0; --laranja-cl: #f5d69e; --verde-cl: #63e578; --roxo-cl: #fac7ff;
+    --texto: #1d1d1f; --cinza: #5b5b5f; --cinza-m: #87868a; --cinza-cl: #d3d3d3; --fundo: #f6f3ea;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #1d1d1f; overflow: hidden; font-family: "Hind Madurai", sans-serif; }
+  body.render { background: var(--fundo); }
+  #stage { width: 1920px; height: 1080px; background: var(--fundo); position: relative; overflow: hidden; transform-origin: 0 0; color: var(--texto); }
+  .abs { position: absolute; }
+  .c { transform: translate(-50%, -50%); }
+
+  /* repositório */
+  #repo { left: 960px; top: 400px; display: flex; align-items: center; gap: 28px; background: #fff; border: 3px solid var(--texto); border-radius: 22px; padding: 30px 48px; box-shadow: 0 10px 0 var(--texto); white-space: nowrap; }
+  #repo .nome { font-size: 64px; font-weight: 700; }
+  #repo .nome b { color: var(--cereja); }
+  .pasta { top: 600px; font-size: 34px; font-weight: 600; background: #fff; border: 3px solid var(--cinza-cl); border-radius: 14px; padding: 14px 28px; white-space: nowrap; display: flex; align-items: center; gap: 14px; }
+  .pasta .selo { font-size: 26px; font-weight: 700; color: #fff; background: var(--verde); border-radius: 999px; padding: 2px 16px; }
+
+  /* trilho dos quatro passos */
+  .passo { top: 880px; width: 380px; height: 170px; border-radius: 20px; border: 4px solid var(--cereja); background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+  .passo .n { font-size: 26px; font-weight: 700; color: var(--cinza-m); }
+  .passo .t { font-size: 42px; font-weight: 700; line-height: 1; }
+  .passo .s { font-size: 26px; font-weight: 600; margin-top: 8px; }
+  .passo.mapeado .s { color: var(--verde); }
+  .passo.aberto { border-style: dashed; border-color: var(--cinza-m); background: transparent; }
+  .passo.aberto .s { color: var(--cinza-m); }
+  .seta-trilho { top: 880px; font-size: 48px; color: var(--cinza-m); }
+
+  /* executores */
+  .exec { top: 360px; width: 420px; display: flex; flex-direction: column; align-items: center; gap: 18px; }
+  .exec .ic { width: 170px; height: 170px; border-radius: 50%; display: grid; place-items: center; border: 5px solid var(--cor); background: #fff; }
+  .exec .ic svg { width: 96px; height: 96px; fill: none; stroke: var(--cor); stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }
+  .exec .rot { font-size: 56px; font-weight: 700; color: var(--cor); line-height: 1; }
+  .exec .sub { font-size: 30px; color: var(--cinza); font-weight: 600; }
+  .chip { font-size: 34px; font-weight: 700; border-radius: 12px; padding: 8px 22px; white-space: nowrap; }
+
+  /* ciclo */
+  .fluxo { top: 230px; font-size: 40px; font-weight: 700; color: var(--texto); white-space: nowrap; display: flex; align-items: center; gap: 12px; }
+  .fluxo .ar { font-size: 64px; color: var(--cereja); }
+  #volta { left: 960px; top: 640px; width: 960px; height: 70px; border: 5px solid var(--cereja); border-top: none; border-radius: 0 0 40px 40px; }
+  #volta-txt { left: 960px; top: 750px; font-size: 38px; font-weight: 700; color: var(--cereja); white-space: nowrap; }
+
+  /* horizontes */
+  .hz { top: 380px; height: 300px; width: 540px; display: flex; flex-direction: column; justify-content: center; padding: 0 60px 0 80px; color: #fff; clip-path: polygon(0 0, 88% 0, 100% 50%, 88% 100%, 0 100%, 12% 50%); }
+  .hz .k { font-size: 44px; font-weight: 700; opacity: .8; }
+  .hz .t { font-size: 48px; font-weight: 700; line-height: 1.05; }
+  #aqui { top: 580px; font-size: 38px; font-weight: 700; color: var(--cereja); white-space: nowrap; }
+
+  /* fecho */
+  .tarefa { top: 700px; width: 380px; text-align: center; font-size: 34px; font-weight: 700; color: var(--roxo); }
+  #titulo { left: 960px; top: 400px; font-size: 104px; font-weight: 700; color: var(--cereja); white-space: nowrap; text-align: center; line-height: 1.1; }
+  #titulo small { display: block; font-size: 48px; color: var(--texto); }
+
+  #legenda { left: 0; right: 0; top: 988px; text-align: center; font-size: 40px; font-weight: 600; color: var(--texto); }
+  #legenda span { background: rgba(255,255,255,.85); border-radius: 10px; padding: 4px 18px; }
+  #bar { position: fixed; left: 0; right: 0; bottom: 0; height: 40px; background: #333; cursor: pointer; }
+  #fill { height: 100%; background: var(--cereja); pointer-events: none; }
+  #time { position: absolute; right: 12px; top: 8px; color: #fff; font: 16px monospace; pointer-events: none; }
+</style>
+
+<div id="stage">
+  <div id="repo" class="abs c">
+    <svg width="80" height="80" viewBox="0 0 16 16"><path fill="#1d1d1f" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+    <span class="nome">livup/<b>fluxo-financeiro</b></span>
+  </div>
+  <div class="pasta abs c" data-x="560">📁 contexto/<span class="selo">versionado</span></div>
+  <div class="pasta abs c" data-x="960">📁 contexto/agentes/<span class="selo">versionado</span></div>
+  <div class="pasta abs c" data-x="1360">📁 specs/<span class="selo">versionado</span></div>
+
+  <div class="passo abs c mapeado" data-x="270"><span class="n">1</span><span class="t">Faturamento</span><span class="s">✓ mapeado</span></div>
+  <div class="passo abs c mapeado" data-x="730"><span class="n">2</span><span class="t">Custeio</span><span class="s">✓ mapeado</span></div>
+  <div class="passo abs c aberto" data-x="1190"><span class="n">3</span><span class="t">Lançamentos</span><span class="s">não mapeado</span></div>
+  <div class="passo abs c aberto" data-x="1650"><span class="n">4</span><span class="t">Fechamento<br>contábil</span><span class="s">não mapeado</span></div>
+  <div class="seta-trilho abs c" data-x="500">›</div>
+  <div class="seta-trilho abs c" data-x="960">›</div>
+  <div class="seta-trilho abs c" data-x="1420">›</div>
+
+  <div id="ex-rotina" class="exec abs c" data-x="400" style="--cor: var(--laranja)">
+    <div class="ic"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="16"/><path d="M50 12v12M50 76v12M12 50h12M76 50h12M23 23l8 8M69 69l8 8M77 23l-8 8M31 69l-8 8"/><circle cx="50" cy="50" r="30"/></svg></div>
+    <div class="rot">Rotina</div><div class="sub">passo a passo exato</div>
+  </div>
+  <div id="ex-agente" class="exec abs c" data-x="960" style="--cor: var(--roxo)">
+    <div class="ic"><svg viewBox="0 0 100 100"><circle cx="42" cy="42" r="24"/><path d="M60 60l24 24"/></svg></div>
+    <div class="rot">Agente</div><div class="sub">objetivo e critério</div>
+  </div>
+  <div id="ex-pessoa" class="exec abs c" data-x="1520" style="--cor: var(--verde)">
+    <div class="ic"><svg viewBox="0 0 100 100"><circle cx="50" cy="34" r="16"/><path d="M20 86c4-18 16-26 30-26s26 8 30 26"/></svg></div>
+    <div class="rot">Pessoa</div><div class="sub">decisão</div>
+  </div>
+  <div id="numero" class="chip abs c" style="left:400px; top:600px; background: var(--laranja); color:#fff">número oficial R$ ···</div>
+  <div class="chip abs c tarefa-ag" data-y="585" style="left:960px; background: var(--roxo-cl); color: var(--roxo)">triar pendência</div>
+  <div class="chip abs c tarefa-ag" data-y="650" style="left:960px; background: var(--roxo-cl); color: var(--roxo)">investigar quebra</div>
+  <div class="chip abs c tarefa-ag" data-y="715" style="left:960px; background: var(--roxo-cl); color: var(--roxo)">explicar variação</div>
+  <div id="decidido" class="chip abs c" style="left:1520px; top:600px; background: var(--verde); color:#fff">✓ decidido</div>
+
+  <div id="f-acusa" class="fluxo abs c" style="left:680px">⚠ acusa <span class="ar">→</span></div>
+  <div id="f-propoe" class="fluxo abs c" style="left:1240px">📄 propõe <span class="ar">→</span></div>
+  <div id="volta" class="abs"></div>
+  <div id="volta-txt" class="abs c">↺ a rotina confere de novo</div>
+
+  <div class="hz abs c" data-x="480" style="background: var(--cereja)"><span class="k">H1</span><span class="t">Confiar no dado</span></div>
+  <div class="hz abs c" data-x="960" style="background: var(--laranja)"><span class="k">H2</span><span class="t">Fechamento contínuo</span></div>
+  <div class="hz abs c" data-x="1440" style="background: var(--roxo)"><span class="k">H3</span><span class="t">Finanças assistida</span></div>
+  <div id="aqui" class="abs c" style="left:330px">▲ estamos aqui</div>
+
+  <div class="tarefa abs c" data-x="270">triar pendências</div>
+  <div class="tarefa abs c" data-x="730">investigar quebra</div>
+  <div class="tarefa abs c" data-x="1190">propor lançamento</div>
+  <div class="tarefa abs c" data-x="1650">explicar variação</div>
+  <div id="legenda" class="abs"></div>
+  <canvas id="avatar" class="abs" style="right: 40px; top: 24px; image-rendering: pixelated"></canvas>
+  <div id="titulo" class="abs c">Cada um faz uma coisa.<small>Nenhum agente faz o fechamento.</small></div>
+</div>
+
+<audio src="../01_voice/take-01.wav" preload="auto"></audio>
+<script src="../03_cues/cues.js"></script>
+<script src="../02_transcript/volume.js" onerror="window.VOLUME = null"></script>
+<script src="../02_transcript/legendas.js" onerror="window.LEGENDAS = []"></script>
+<script src="../../../assets/leonardo/busto.js"></script>
+<script src="../../../assets/leonardo/corpo-inteiro.js"></script>
+<script src="../../../tools/sprite.js"></script>
+<script src="scene.js"></script>
+<script src="../../../tools/stage.js"></script>
+</html>

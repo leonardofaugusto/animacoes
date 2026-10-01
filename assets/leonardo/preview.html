@@ -1,0 +1,11 @@
+<!doctype html><meta charset="utf-8"><body style="margin:0;background:#e50145;padding:30px;font:600 22px sans-serif;color:#fff">
+<style>canvas{image-rendering:pixelated;width:200px}.l{display:flex;gap:30px;align-items:flex-end;margin-bottom:24px}</style>
+<div>Busto (busto.js)</div><div class="l"><canvas id="a"></canvas><canvas id="b"></canvas><canvas id="c"></canvas></div>
+<div>Corpo inteiro (corpo-inteiro.js)</div><div class="l"><canvas id="d"></canvas><canvas id="e"></canvas><canvas id="f"></canvas><canvas id="g"></canvas><canvas id="h"></canvas></div>
+<script src="busto.js"></script><script src="corpo-inteiro.js"></script><script src="../../tools/sprite.js"></script>
+<script>
+const A = SPRITE_LEONARDO_BUSTO, B = SPRITE_LEONARDO_CORPO;
+drawSprite(a, A); drawSprite(b, A, { boca: 1 }); drawSprite(c, A, { pisca: 1 });
+drawSprite(d, B); drawSprite(e, B, { boca: 1 }); drawSprite(f, B, { pisca: 1 }); drawSprite(g, B, { gestoD: 1, boca: 1 }); drawSprite(h, B, { gestoE: 1 });
+document.title = [A, B].flatMap((S) => [S.base, ...Object.values(S.gestoD || {}), ...Object.values(S.gestoE || {})].flat().map((r, i) => (r.length !== 32 ? i + ":" + r.length : ""))).filter(Boolean).join(",") || "ok";
+</script>

@@ -1,0 +1,74 @@
+"""script.md + words.json -> 02_transcript/legendas.js (para a cena) + legendas.srt (para plataforma).
+
+Uso: .venv\\Scripts\\python.exe tools\\legendas.py videos\\<nome>
+O TEXTO vem do roteiro (grafia certa); o Whisper só dá os TEMPOS. Cada palavra do roteiro
+casa com a próxima palavra igual do Whisper numa janela curta; sem par, herda o tempo da vizinha.
+Quebra em blocos de até MAX caracteres, preferindo fechar em pontuação.
+"""
+import json
+import re
+import sys
+import unicodedata
+from pathlib import Path
+
+MAX = 42
+video = Path(sys.argv[1])
+
+
+def norm(s):
+    s = unicodedata.normalize("NFKD", s.lower())
+    return re.sub(r"[^a-z0-9]", "", "".join(c for c in s if not unicodedata.combining(c)))
+
+
+md = (video / "01_voice" / "script.md").read_text(encoding="utf-8").split("## Pronúncia")[0]
+roteiro = " ".join(l for l in md.splitlines() if l.strip() and not l.startswith(("#", "~"))).split()
+
+ws = []  # Whisper, com "-financeiro" grudado no token anterior
+for w in json.loads((video / "02_transcript" / "words.json").read_text(encoding="utf-8")):
+    if w["w"].startswith("-") and ws:
+        ws[-1] = {**ws[-1], "w": ws[-1]["w"] + w["w"], "end": w["end"]}
+    else:
+        ws.append(dict(w))
+
+tempos, j = [], 0
+for palavra in roteiro:
+    hit = next((k for k in range(j, min(j + 4, len(ws))) if norm(ws[k]["w"]) == norm(palavra)), None)
+    if hit is None:
+        tempos.append(None)
+    else:
+        tempos.append((ws[hit]["start"], ws[hit]["end"]))
+        j = hit + 1
+sem_par = [p for p, t in zip(roteiro, tempos) if t is None]
+for i, t in enumerate(tempos):  # sem par: começa onde a anterior terminou
+    if t is None:
+        a = tempos[i - 1][1] if i else 0
+        tempos[i] = (a, a)
+
+blocos, atual = [], []
+for i, palavra in enumerate(roteiro):
+    if atual and len(" ".join(roteiro[k] for k in atual + [i])) > MAX:
+        blocos.append(atual)
+        atual = []
+    atual.append(i)
+    txt = " ".join(roteiro[k] for k in atual)
+    if palavra[-1] in ".!?" or (palavra[-1] in ",:" and len(txt) > MAX * 0.6):
+        blocos.append(atual)
+        atual = []
+if atual:
+    blocos.append(atual)
+
+leg = [{"t0": tempos[b[0]][0], "t1": tempos[b[-1]][1], "txt": " ".join(roteiro[k] for k in b)} for b in blocos]
+for a, b in zip(leg, leg[1:]):  # segura a legenda até a próxima se a pausa for curta
+    if b["t0"] - a["t1"] < 0.6:
+        a["t1"] = b["t0"]
+
+out = video / "02_transcript"
+(out / "legendas.js").write_text("window.LEGENDAS = " + json.dumps(leg, ensure_ascii=False) + ";\n", encoding="utf-8")
+
+
+def ts(s):
+    return f"{int(s // 3600):02d}:{int(s % 3600 // 60):02d}:{int(s % 60):02d},{int(s * 1000 % 1000):03d}"
+
+
+(out / "legendas.srt").write_text("\n".join(f"{i}\n{ts(l['t0'])} --> {ts(l['t1'])}\n{l['txt']}\n" for i, l in enumerate(leg, 1)), encoding="utf-8")
+print(f"{len(leg)} legendas; maior: {max(len(l['txt']) for l in leg)} caracteres; palavras sem par no áudio: {sem_par or 'nenhuma'}")

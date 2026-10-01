@@ -1,0 +1,115 @@
+1
+00:00:00,000 --> 00:00:01,740
+O agente financeiro já tem casa.
+
+2
+00:00:01,740 --> 00:00:03,600
+O agente financeiro está no GitHub,
+
+3
+00:00:03,600 --> 00:00:05,820
+no repositório fluxo-financeiro.
+
+4
+00:00:05,820 --> 00:00:07,600
+Contexto, agentes e planos,
+
+5
+00:00:07,600 --> 00:00:09,440
+tudo versionado no mesmo lugar.
+
+6
+00:00:09,440 --> 00:00:11,400
+O fechamento tem quatro passos:
+
+7
+00:00:11,400 --> 00:00:14,200
+faturamento, custeio, lançamentos e
+
+8
+00:00:14,200 --> 00:00:15,700
+fechamento contábil.
+
+9
+00:00:15,700 --> 00:00:17,620
+Os dois primeiros já estão mapeados.
+
+10
+00:00:17,620 --> 00:00:19,560
+Os dois últimos, ainda não.
+
+11
+00:00:19,560 --> 00:00:22,660
+Em cada passo, quem executa é um só.
+
+12
+00:00:22,660 --> 00:00:24,440
+Se existe passo a passo exato,
+
+13
+00:00:24,440 --> 00:00:26,620
+é rotina, determinística.
+
+14
+00:00:26,620 --> 00:00:28,680
+É dela que sai o número oficial.
+
+15
+00:00:28,680 --> 00:00:31,140
+Se existe objetivo, mas o caminho depende
+
+16
+00:00:31,140 --> 00:00:34,600
+do que aparece, é agente: triar pendência,
+
+17
+00:00:34,600 --> 00:00:37,560
+investigar quebra, explicar variação.
+
+18
+00:00:37,560 --> 00:00:39,740
+E se é decisão, é pessoa.
+
+19
+00:00:39,740 --> 00:00:40,960
+O ciclo é simples.
+
+20
+00:00:40,960 --> 00:00:42,580
+A rotina acusa.
+
+21
+00:00:42,580 --> 00:00:44,900
+O agente propõe, com evidência.
+
+22
+00:00:44,900 --> 00:00:46,260
+A pessoa decide.
+
+23
+00:00:46,260 --> 00:00:48,260
+E a rotina confere de novo.
+
+24
+00:00:48,260 --> 00:00:50,260
+O plano tem três horizontes:
+
+25
+00:00:50,260 --> 00:00:53,000
+confiar no dado, fechamento contínuo e
+
+26
+00:00:53,000 --> 00:00:54,200
+finanças assistida.
+
+27
+00:00:54,200 --> 00:00:56,380
+Estamos no começo do primeiro.
+
+28
+00:00:56,380 --> 00:00:58,200
+Nenhum agente faz o fechamento.
+
+29
+00:00:58,200 --> 00:00:59,380
+Cada um faz uma coisa.
